@@ -1,10 +1,36 @@
 import { queryOptions } from "@tanstack/react-query"
 
-import { cartApi, categoriesApi, ordersApi, productsApi, reviewsApi, wishlistApi } from "@/api/handlers"
+import {
+  cartApi,
+  categoriesApi,
+  dashboardApi,
+  ordersApi,
+  productsApi,
+  reviewsApi,
+  wishlistApi,
+} from "@/lib/api/handlers"
 import { queryKeys } from "@/lib/query-keys"
-import type { ProductSearchParams } from "@/types/api"
+import type { ProductSearchParams } from "@/lib/types/api"
 
 export const queries = {
+  adminDashboardSummary: (enabled = true) =>
+    queryOptions({
+      queryKey: queryKeys.adminDashboardSummary,
+      queryFn: () => dashboardApi.summary(),
+      enabled,
+    }),
+  adminDashboardRecentOrders: (enabled = true) =>
+    queryOptions({
+      queryKey: queryKeys.adminDashboardRecentOrders,
+      queryFn: () => dashboardApi.recentOrders(),
+      enabled,
+    }),
+  adminDashboardLowStockProducts: (enabled = true, threshold = 5) =>
+    queryOptions({
+      queryKey: queryKeys.adminDashboardLowStock(threshold),
+      queryFn: () => dashboardApi.lowStockProducts({ threshold, size: 10 }),
+      enabled,
+    }),
   adminOrders: (enabled = true) =>
     queryOptions({
       queryKey: queryKeys.adminOrders,
@@ -52,7 +78,10 @@ export const queries = {
       queryKey: [...queryKeys.products, params],
       queryFn: () => productsApi.list(params),
     }),
-  reviews: (productId: string, params: { page?: number; size?: number } = { size: 6 }) =>
+  reviews: (
+    productId: string,
+    params: { page?: number; size?: number } = { size: 6 }
+  ) =>
     queryOptions({
       queryKey: queryKeys.reviews(productId, params),
       queryFn: () => reviewsApi.list(productId, params),

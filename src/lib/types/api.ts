@@ -19,6 +19,7 @@ export type ApiError = {
   error?: string
   message?: string
   path?: string
+  fields?: Record<string, string>
   errors?: Record<string, string>
 }
 
@@ -39,7 +40,7 @@ export type CategoryRequest = {
   description?: string
 }
 
-export type ProductStatus = "ACTIVE" | "INACTIVE" | "OUT_OF_STOCK"
+export type ProductStatus = "AVAILABLE" | "OUT_OF_STOCK" | "DISCONTINUED"
 
 export type Product = {
   id: UUID
@@ -56,6 +57,39 @@ export type Product = {
   reviewCount: number
   createdAt: ISODateTime
   updatedAt: ISODateTime
+}
+
+export type DashboardSummary = {
+  totalUsers: number
+  activeUsers: number
+  totalProducts: number
+  availableProducts: number
+  outOfStockProducts: number
+  lowStockProducts: number
+  totalOrders: number
+  pendingOrders: number
+  paidOrders: number
+  shippedOrders: number
+  cancelledOrders: number
+  totalRevenue: Money
+  todayRevenue: Money
+}
+
+export type RecentOrder = {
+  id: UUID
+  orderNumber: string
+  userId: UUID
+  status: OrderStatus
+  totalAmount: Money
+  createdAt: ISODateTime
+}
+
+export type LowStockProduct = {
+  id: UUID
+  name: string
+  sku: string
+  stockQuantity: number
+  status: ProductStatus
 }
 
 export type ProductRequest = {

@@ -1,4 +1,9 @@
-import { apiRequest, clearAuthTokens, getRefreshToken, setAuthTokens } from "@/api/client"
+import {
+  apiRequest,
+  clearAuthTokens,
+  getRefreshToken,
+  setAuthTokens,
+} from "@/lib/api/client"
 import type {
   Address,
   AddressRequest,
@@ -6,20 +11,23 @@ import type {
   Cart,
   Category,
   CategoryRequest,
+  DashboardSummary,
   LoginRequest,
+  LowStockProduct,
   Order,
   OrderStatus,
   PageResponse,
   Product,
   ProductRequest,
   ProductSearchParams,
+  RecentOrder,
   Review,
   ReviewRequest,
   User,
   UserRequest,
   UUID,
   WishlistItem,
-} from "@/types/api"
+} from "@/lib/types/api"
 
 export const authApi = {
   async login(payload: LoginRequest) {
@@ -63,7 +71,26 @@ export const productsApi = {
   bySlug(slug: string) {
     return apiRequest<Product>(`/api/v1/products/slug/${slug}`, { auth: false })
   },
-  create(payload: ProductRequest) {
+  create(payload: ProductRequest, image?: File) {
+    if (image) {
+      const formData = new FormData()
+      formData.append("name", payload.name)
+      formData.append("description", payload.description ?? "")
+      formData.append("price", String(payload.price))
+      formData.append("stockQuantity", String(payload.stockQuantity))
+      formData.append("sku", payload.sku)
+      formData.append("imageUrl", payload.imageUrl ?? "")
+      if (payload.categoryId) {
+        formData.append("categoryId", payload.categoryId)
+      }
+      formData.append("image", image)
+
+      return apiRequest<Product>("/api/v1/products", {
+        method: "POST",
+        body: formData,
+      })
+    }
+
     return apiRequest<Product>("/api/v1/products", {
       method: "POST",
       body: JSON.stringify(payload),
@@ -98,6 +125,23 @@ export const categoriesApi = {
   },
   remove(id: UUID) {
     return apiRequest<void>(`/api/v1/categories/${id}`, { method: "DELETE" })
+  },
+}
+
+export const dashboardApi = {
+  summary() {
+    return apiRequest<DashboardSummary>("/api/v1/admin/dashboard/summary")
+  },
+  recentOrders() {
+    return apiRequest<RecentOrder[]>("/api/v1/admin/dashboard/recent-orders")
+  },
+  lowStockProducts(
+    params: { threshold?: number; page?: number; size?: number } = {}
+  ) {
+    return apiRequest<PageResponse<LowStockProduct>>(
+      "/api/v1/admin/dashboard/low-stock-products",
+      { query: params }
+    )
   },
 }
 
@@ -164,7 +208,9 @@ export const ordersApi = {
   get(id: UUID) {
     return apiRequest<Order>(`/api/v1/orders/${id}`)
   },
-  adminList(params: { status?: OrderStatus; page?: number; size?: number } = {}) {
+  adminList(
+    params: { status?: OrderStatus; page?: number; size?: number } = {}
+  ) {
     return apiRequest<PageResponse<Order>>("/api/v1/admin/orders", {
       query: params,
     })

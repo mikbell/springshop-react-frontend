@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatDate, formatMoney } from "@/lib/format"
 import { queries } from "@/lib/queries"
-import { useAuth } from "@/state/auth"
+import { useAuth } from "@/lib/state/auth"
 
 export function OrdersPage() {
   const { isAuthenticated } = useAuth()

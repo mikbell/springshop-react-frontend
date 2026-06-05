@@ -1,10 +1,10 @@
 import * as React from "react"
 import { useQueryClient } from "@tanstack/react-query"
 
-import { authApi, userApi } from "@/api/handlers"
-import { clearAuthTokens, getAccessToken } from "@/api/client"
+import { authApi, userApi } from "@/lib/api/handlers"
+import { clearAuthTokens, getAccessToken } from "@/lib/api/client"
 import { queryKeys } from "@/lib/query-keys"
-import type { LoginRequest, User, UserRequest } from "@/types/api"
+import type { LoginRequest, User, UserRequest } from "@/lib/types/api"
 
 type AuthContextValue = {
   user: User | null

@@ -1,22 +1,22 @@
 import * as React from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { LogOut, Menu, Moon, Package, ShieldAlert, ShoppingBag, ShoppingCart, Sun, UserRound } from 'lucide-react'
+import { LogIn, LogOut, Menu, Moon, Package, ShieldAlert, ShoppingBag, ShoppingCart, Sun, UserRound } from 'lucide-react'
 
 import { Logo } from './logo'
 import { useTheme } from '../theme-provider'
-import { useAuth } from '@/state/auth'
+import { useAuth } from '@/lib/state/auth'
 import CustomNavLink from './custom-nav-link'
 import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu'
-import { AuthDialog } from '../shop/auth-dialog'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../ui/sheet'
 import { queries } from '@/lib/queries'
 
 export default function Header() {
     const { theme, setTheme } = useTheme()
     const { user, isAuthenticated, isAdmin, logout } = useAuth()
+    const location = useLocation()
     const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false)
     const { data: cart = null } = useQuery(queries.cart(isAuthenticated))
 
@@ -131,7 +131,12 @@ export default function Header() {
                             </DropdownMenuContent>
                         </DropdownMenu>
                     ) : (
-                        <AuthDialog />
+                        <Button asChild>
+                            <Link to="/login" state={{ from: `${location.pathname}${location.search}` }}>
+                                <LogIn />
+                                Accedi
+                            </Link>
+                        </Button>
                     )}
 
                     {/* Mobile Menu Trigger */}
@@ -141,7 +146,7 @@ export default function Header() {
                                 <Menu className="h-5 w-5" />
                             </Button>
                         </SheetTrigger>
-                        <SheetContent side="left" className="w-[280px]">
+                        <SheetContent side="left" className="w-70">
                             <SheetHeader className="text-left pb-4 border-b">
                                 <SheetTitle className="flex items-center gap-2">
                                     <Package className="h-5 w-5 text-primary" /> SpringShop

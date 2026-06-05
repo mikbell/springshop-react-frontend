@@ -1,13 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { CreditCard, Loader2, Minus, Plus, Trash2 } from "lucide-react"
 
-import { cartApi, ordersApi } from "@/api/handlers"
+import { cartApi, ordersApi } from "@/lib/api/handlers"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatMoney } from "@/lib/format"
 import { queryKeys } from "@/lib/query-keys"
 import { queries } from "@/lib/queries"
-import { useAuth } from "@/state/auth"
+import { useAuth } from "@/lib/state/auth"
 
 export function CartPage() {
   const { isAuthenticated } = useAuth()

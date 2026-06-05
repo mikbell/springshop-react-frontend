@@ -1,11 +1,6 @@
-import type { ApiError, AuthResponse } from "@/types/api"
+import type { ApiError, AuthResponse } from "@/lib/types/api"
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "")
-
-if (!API_BASE_URL) {
-  throw new Error("Missing VITE_API_BASE_URL environment variable")
-}
-
+const API_BASE_URL = "http://localhost:8080"
 const ACCESS_TOKEN_KEY = "springshop.accessToken"
 const REFRESH_TOKEN_KEY = "springshop.refreshToken"
 
@@ -29,7 +24,9 @@ export function getRefreshToken() {
   return localStorage.getItem(REFRESH_TOKEN_KEY)
 }
 
-export function setAuthTokens(tokens: Pick<AuthResponse, "token" | "refreshToken">) {
+export function setAuthTokens(
+  tokens: Pick<AuthResponse, "token" | "refreshToken">
+) {
   localStorage.setItem(ACCESS_TOKEN_KEY, tokens.token)
   localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken)
 }
@@ -98,13 +95,20 @@ async function refreshAccessToken() {
 
 export async function apiRequest<T>(
   path: string,
-  options: RequestInit & { query?: Record<string, unknown>; auth?: boolean } = {}
+  options: RequestInit & {
+    query?: Record<string, unknown>
+    auth?: boolean
+  } = {}
 ): Promise<T> {
   const { query, auth = true, headers, ...init } = options
   const token = getAccessToken()
   const requestHeaders = new Headers(headers)
 
-  if (!requestHeaders.has("Content-Type") && init.body) {
+  if (
+    !requestHeaders.has("Content-Type") &&
+    init.body &&
+    !(init.body instanceof FormData)
+  ) {
     requestHeaders.set("Content-Type", "application/json")
   }
 
@@ -112,10 +116,13 @@ export async function apiRequest<T>(
     requestHeaders.set("Authorization", `Bearer ${token}`)
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}${toQueryString(query)}`, {
-    ...init,
-    headers: requestHeaders,
-  })
+  const response = await fetch(
+    `${API_BASE_URL}${path}${toQueryString(query)}`,
+    {
+      ...init,
+      headers: requestHeaders,
+    }
+  )
 
   if (response.status === 401 && auth && (await refreshAccessToken())) {
     return apiRequest<T>(path, options)
