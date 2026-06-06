@@ -1,8 +1,8 @@
 import type { ApiError, AuthResponse } from "@/lib/types/api"
 
-const API_BASE_URL = "http://localhost:8080"
-const ACCESS_TOKEN_KEY = "springshop.accessToken"
-const REFRESH_TOKEN_KEY = "springshop.refreshToken"
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+const ACCESS_TOKEN_KEY = import.meta.env.VITE_ACCESS_TOKEN_KEY
+const REFRESH_TOKEN_KEY = import.meta.env.VITE_REFRESH_TOKEN_KEY
 
 export class ApiClientError extends Error {
   readonly status: number
