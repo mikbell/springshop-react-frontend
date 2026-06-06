@@ -159,8 +159,17 @@ export function ProductPage() {
         {/* Product Meta */}
         <div className="flex flex-col justify-start gap-5">
           <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary" className="px-2.5 py-0.5">
-              {product.category?.name ?? "Senza categoria"}
+            <Badge asChild variant="secondary" className="px-2.5 py-0.5">
+              <Link
+                to={
+                  product.category
+                    ? `/?category=${product.category.slug}`
+                    : "/categories"
+                }
+                className="hover:underline"
+              >
+                {product.category?.name ?? "Senza categoria"}
+              </Link>
             </Badge>
             <Badge
               variant="outline"
@@ -173,7 +182,7 @@ export function ProductPage() {
               className={cn(
                 "px-2.5 py-0.5",
                 !unavailable &&
-                  "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/10 dark:text-emerald-400"
+                "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/10 dark:text-emerald-400"
               )}
             >
               {unavailable ? "Non disponibile" : "Disponibile"}

@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { useAuth } from "@/lib/state/auth"
-import { Field } from "@/components/shared/form-field"
+import { Field } from "@/components/shop/form-field"
 
 type LocationState = {
   from?: string

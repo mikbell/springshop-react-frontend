@@ -23,6 +23,7 @@ import type {
   RecentOrder,
   Review,
   ReviewRequest,
+  StripeCheckoutSession,
   User,
   UserRequest,
   UUID,
@@ -220,6 +221,18 @@ export const ordersApi = {
       method: "PUT",
       body: JSON.stringify({ status }),
     })
+  },
+}
+
+export const checkoutApi = {
+  createStripeSession(payload?: { successUrl?: string; cancelUrl?: string }) {
+    return apiRequest<StripeCheckoutSession>(
+      "/api/v1/checkout/stripe/session",
+      {
+        method: "POST",
+        body: payload ? JSON.stringify(payload) : undefined,
+      }
+    )
   },
 }
 

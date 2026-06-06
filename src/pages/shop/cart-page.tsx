@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { CreditCard, Loader2, Minus, Plus, Trash2 } from "lucide-react"
 
-import { cartApi, ordersApi } from "@/lib/api/handlers"
+import { cartApi, checkoutApi } from "@/lib/api/handlers"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatMoney } from "@/lib/format"
@@ -33,10 +33,23 @@ export function CartPage() {
     },
   })
   const checkoutMutation = useMutation({
-    mutationFn: () => ordersApi.checkout(),
-    onSuccess: () => {
+    mutationFn: async () => {
+      const session = await checkoutApi.createStripeSession({
+        successUrl: `${window.location.origin}/orders/success`,
+        cancelUrl: `${window.location.origin}/cart`,
+      })
+      const checkoutUrl = session.url ?? session.checkoutUrl ?? session.sessionUrl
+
+      if (!checkoutUrl) {
+        throw new Error("La sessione Stripe non contiene una URL di checkout.")
+      }
+
+      return checkoutUrl
+    },
+    onSuccess: (checkoutUrl) => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.cart })
       void queryClient.invalidateQueries({ queryKey: queryKeys.orders })
+      window.location.assign(checkoutUrl)
     },
   })
 
@@ -123,9 +136,12 @@ export function CartPage() {
             <span>{formatMoney(cart.totalCartPrice)}</span>
           </div>
           <Button disabled={checkoutMutation.isPending} onClick={() => void checkoutMutation.mutateAsync()} type="button">
-            <CreditCard />
-            Checkout
+            {checkoutMutation.isPending ? <Loader2 className="animate-spin" /> : <CreditCard />}
+            Paga con Stripe
           </Button>
+          {checkoutMutation.error ? (
+            <p className="text-sm text-destructive">{checkoutMutation.error.message}</p>
+          ) : null}
           <Button disabled={clearMutation.isPending} onClick={() => void clearMutation.mutateAsync()} type="button" variant="outline">
             Svuota carrello
           </Button>

@@ -10,7 +10,6 @@ import {
   TrendingUp,
 } from "lucide-react"
 
-import { AdminLoading, AdminPageShell } from "../../components/layouts/admin-page-shell"
 import { Badge } from "@/components/ui/badge"
 import {
   Card,
@@ -36,11 +35,12 @@ import type {
   RecentOrder,
 } from "@/lib/types/api"
 import { cn } from "@/lib/utils"
+import { LoadingSpinner } from "@/components/shop/loading-spinner"
 
 export function SummaryPage() {
   const { isAdmin } = useAuth()
 
-  // Eseguiamo i fetch solo se l'utente è admin
+  // Eseguiamo i fetch delegando il controllo accessi alle rotte superiori
   const { data: summary, isLoading: loadingSummary } = useQuery(
     queries.adminDashboardSummary(isAdmin)
   )
@@ -51,18 +51,16 @@ export function SummaryPage() {
     queries.adminDashboardLowStockProducts(isAdmin, 5)
   )
 
+  if (loadingSummary || loadingRecentOrders || loadingLowStock) {
+    return <LoadingSpinner />
+  }
+
   return (
-    <AdminPageShell isAdmin={isAdmin} title="Dashboard">
-      {loadingSummary || loadingRecentOrders || loadingLowStock ? (
-        <AdminLoading />
-      ) : (
-        <AdminDashboard
-          lowStockProducts={lowStockPage?.content ?? []}
-          recentOrders={recentOrders}
-          summary={summary}
-        />
-      )}
-    </AdminPageShell>
+    <AdminDashboard
+      lowStockProducts={lowStockPage?.content ?? []}
+      recentOrders={recentOrders}
+      summary={summary}
+    />
   )
 }
 
@@ -224,7 +222,7 @@ function AdminDashboard({
                   <TableBody>
                     {lowStockProducts.map((product) => (
                       <TableRow key={product.id} className="hover:bg-muted/20 transition-colors">
-                        <TableCell className="font-medium max-w-[200px] truncate pl-6" title={product.name}>
+                        <TableCell className="font-medium max-w-50 truncate pl-6" title={product.name}>
                           {product.name}
                         </TableCell>
                         <TableCell className="text-muted-foreground font-mono text-xs">{product.sku}</TableCell>
@@ -256,7 +254,6 @@ function AdminDashboard({
   )
 }
 
-// Esportato correttamente il sotto-componente risolvendo i bug grafici
 function StatusCard({
   icon: Icon,
   label,

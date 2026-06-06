@@ -3,8 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Save, Loader2, PackagePlus, AlertCircle } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 
-import { AdminLoading, AdminPageShell } from "../../components/layouts/admin-page-shell"
-import { Field } from "../../components/shared/form-field"
+import { Field } from "../../components/shop/form-field"
 import { ApiClientError } from "@/lib/api/client"
 import { productsApi } from "@/lib/api/handlers"
 import { Button } from "@/components/ui/button"
@@ -22,6 +21,7 @@ import { queries } from "@/lib/queries"
 import { useAuth } from "@/lib/state/auth"
 import type { ProductRequest } from "@/lib/types/api"
 import { cn } from "@/lib/utils"
+import { LoadingSpinner } from "@/components/shop/loading-spinner"
 
 const allowedProductImageExtensions = ["jpg", "jpeg", "png", "webp", "gif"]
 const maxProductImageSize = 5 * 1024 * 1024
@@ -162,7 +162,7 @@ export function CreateProductPage() {
       stockQuantity: Number(data.get("stockQuantity")),
       sku: String(data.get("sku") || "").trim(),
       imageUrl: undefined,
-      categoryId: selectedCategory || undefined,
+      categoryId: (selectedCategory && selectedCategory !== "none_value") ? selectedCategory : undefined,
     }
 
     const validationErrors = validateProduct(payload)
@@ -179,128 +179,128 @@ export function CreateProductPage() {
     }
   }
 
+  if (loadingCategories) {
+    return <LoadingSpinner />
+  }
+
   return (
-    <AdminPageShell isAdmin={isAdmin} title="Nuovo prodotto">
-      {loadingCategories ? (
-        <AdminLoading />
-      ) : (
-        <Card className="max-w-xl shadow-sm border animate-in fade-in-50 duration-200">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-xl font-bold tracking-tight flex items-center gap-2">
-              <PackagePlus className="h-5 w-5 text-primary" />
-              <span>Dettagli prodotto</span>
-            </CardTitle>
-            <CardDescription>Inserisci le informazioni necessarie per pubblicare il prodotto nel catalogo.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form
-              className="space-y-4"
-              noValidate
-              onSubmit={(event) => void createProduct(event)}
-            >
-              {/* Alert Errore Globale API */}
-              {errors.form && (
-                <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm font-medium text-destructive animate-in shake">
-                  <AlertCircle className="h-4 w-4 shrink-0" />
-                  <p>{errors.form}</p>
-                </div>
+    <Card className="max-w-xl shadow-sm border animate-in fade-in-50 duration-200">
+      <CardHeader className="space-y-1">
+        <CardTitle className="text-xl font-bold tracking-tight flex items-center gap-2">
+          <PackagePlus className="h-5 w-5 text-primary" />
+          <span>Dettagli prodotto</span>
+        </CardTitle>
+        <CardDescription>Inserisci le informazioni necessarie per pubblicare il prodotto nel catalogo.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form
+          className="space-y-4"
+          noValidate
+          onSubmit={(event) => void createProduct(event)}
+        >
+          {/* Alert Errore Globale API */}
+          {errors.form && (
+            <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm font-medium text-destructive animate-in shake">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <p>{errors.form}</p>
+            </div>
+          )}
+
+          {/* Nome & SKU */}
+          <Field error={errors.name} label="Nome prodotto" name="name" placeholder="Es. Scarpe da ginnastica" />
+          <Field error={errors.sku} label="Codice SKU" name="sku" placeholder="Es. SCRP-GNN-01" />
+
+          {/* Prezzo & Stock affiancati */}
+          <div className="grid grid-cols-2 gap-4">
+            <Field
+              error={errors.price}
+              label="Prezzo (€)"
+              min="0.01"
+              name="price"
+              step="0.01"
+              type="number"
+              placeholder="0.00"
+            />
+            <Field
+              error={errors.stockQuantity}
+              label="Unità in Stock"
+              min="0"
+              name="stockQuantity"
+              type="number"
+              placeholder="0"
+            />
+          </div>
+
+          {/* File Immagine */}
+          <Field
+            accept="image/*"
+            error={errors.imageUrl}
+            label="Immagine del prodotto"
+            name="imageFile"
+            required={false}
+            type="file"
+          />
+
+          {/* Componente Categoria (Shadcn UI Style) */}
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              Categoria
+            </label>
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className={cn("w-full h-9 rounded-lg shadow-sm", errors.categoryId && "border-destructive")}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleziona una categoria (Opzionale)" />
+                </SelectTrigger>
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="none_value" className="text-muted-foreground italic">Senza categoria</SelectItem>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.categoryId && (
+              <p className="text-xs font-medium text-destructive">{errors.categoryId}</p>
+            )}
+          </div>
+
+          {/* Descrizione Prodotto */}
+          <div className="space-y-1.5">
+            <label htmlFor="description" className="text-sm font-medium leading-none">
+              Descrizione breve
+            </label>
+            <Textarea
+              id="description"
+              aria-invalid={Boolean(errors.description)}
+              className={cn(
+                "resize-none min-h-25 rounded-lg shadow-sm",
+                errors.description && "border-destructive focus-visible:ring-destructive"
               )}
+              name="description"
+              placeholder="Inserisci le caratteristiche del prodotto..."
+            />
+            {errors.description && (
+              <p className="text-xs font-medium text-destructive">{errors.description}</p>
+            )}
+          </div>
 
-              {/* Nome & SKU */}
-              <Field error={errors.name} label="Nome prodotto" name="name" placeholder="Es. Scarpe da ginnastica" />
-              <Field error={errors.sku} label="Codice SKU" name="sku" placeholder="Es. SCRP-GNN-01" />
-
-              {/* Prezzo & Stock affiancati */}
-              <div className="grid grid-cols-2 gap-4">
-                <Field
-                  error={errors.price}
-                  label="Prezzo (€)"
-                  min="0.01"
-                  name="price"
-                  step="0.01"
-                  type="number"
-                  placeholder="0.00"
-                />
-                <Field
-                  error={errors.stockQuantity}
-                  label="Unità in Stock"
-                  min="0"
-                  name="stockQuantity"
-                  type="number"
-                  placeholder="0"
-                />
-              </div>
-
-              {/* File Immagine */}
-              <Field
-                accept="image/*"
-                error={errors.imageUrl}
-                label="Immagine del prodotto"
-                name="imageFile"
-                required={false}
-                type="file"
-              />
-
-              {/* Componente Categoria (Shadcn UI Style) */}
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Categoria
-                </label>
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className={cn("w-full h-9 rounded-lg shadow-sm", errors.categoryId && "border-destructive")}>
-                    <SelectValue placeholder="Seleziona una categoria (Opzionale)" />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-xl">
-                    <SelectItem value="none_value" className="text-muted-foreground italic">Senza categoria</SelectItem>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.categoryId && (
-                  <p className="text-xs font-medium text-destructive">{errors.categoryId}</p>
-                )}
-              </div>
-
-              {/* Descrizione Prodotto */}
-              <div className="space-y-1.5">
-                <label htmlFor="description" className="text-sm font-medium leading-none">
-                  Descrizione breve
-                </label>
-                <Textarea
-                  id="description"
-                  aria-invalid={Boolean(errors.description)}
-                  className={cn(
-                    "resize-none min-h-[100px] rounded-lg shadow-sm",
-                    errors.description && "border-destructive focus-visible:ring-destructive"
-                  )}
-                  name="description"
-                  placeholder="Inserisci le caratteristiche del prodotto..."
-                />
-                {errors.description && (
-                  <p className="text-xs font-medium text-destructive">{errors.description}</p>
-                )}
-              </div>
-
-              {/* Bottone di Invio */}
-              <Button
-                disabled={createMutation.isPending}
-                type="submit"
-                className="w-full gap-2 rounded-lg shadow-sm font-medium mt-2"
-              >
-                {createMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Save className="h-4 w-4" />
-                )}
-                <span>{createMutation.isPending ? "Salvataggio in corso..." : "Crea prodotto"}</span>
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      )}
-    </AdminPageShell>
+          {/* Bottone di Invio */}
+          <Button
+            disabled={createMutation.isPending}
+            type="submit"
+            className="w-full gap-2 rounded-lg shadow-sm font-medium mt-2"
+          >
+            {createMutation.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
+            <span>{createMutation.isPending ? "Salvataggio in corso..." : "Crea prodotto"}</span>
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   )
 }

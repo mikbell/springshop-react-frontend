@@ -1,7 +1,7 @@
-import { AppLayout } from "@/components/layouts/app-layout"
+import { ShopLayout } from "@/components/layouts/shop-layout"
 
 export function App() {
-  return <AppLayout />
+  return <ShopLayout />
 }
 
 

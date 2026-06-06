@@ -200,6 +200,13 @@ export type Order = {
   createdAt: ISODateTime
 }
 
+export type StripeCheckoutSession = {
+  id?: string
+  url?: string
+  checkoutUrl?: string
+  sessionUrl?: string
+}
+
 export type ReviewRequest = {
   rating: number
   comment?: string
