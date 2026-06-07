@@ -1,6 +1,6 @@
 import * as React from "react"
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Loader2, Inbox } from "lucide-react"
+import { Inbox } from "lucide-react"
 import { useSearchParams } from "react-router-dom"
 
 import { cartApi, wishlistApi } from "@/lib/api/handlers"
@@ -66,70 +66,92 @@ export function ProductsPage() {
   })
 
   return (
-    <div className="space-y-6">
-      {/* Header Catalogo */}
-      <section className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="space-y-8">
+      <section className="flex flex-col gap-4 rounded-2xl border bg-card p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1">
           <h1 className="text-2xl font-bold tracking-tight">Catalogo prodotti</h1>
           <p className="text-sm text-muted-foreground">
-            Sfoglia e filtra l'inventario disponibile in tempo reale.
+            Sfoglia l’inventario aggiornato e trova rapidamente i prodotti disponibili.
           </p>
         </div>
+
+        {!isLoading && (
+          <p className="text-sm text-muted-foreground">
+            <span className="font-medium text-foreground">{products.totalElements}</span>{" "}
+            prodotti trovati
+          </p>
+        )}
       </section>
 
-      {/* Gestione Errori */}
       {error instanceof Error && (
-        <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive font-medium">
-          Si è verificato un errore durante il recupero dei prodotti: {error.message}
+        <div
+          role="alert"
+          className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive shadow-sm"
+        >
+          <p className="font-semibold">Impossibile caricare il catalogo</p>
+          <p className="mt-1 text-destructive/90">{error.message}</p>
         </div>
       )}
 
-      {/* Contenuto Principale / Grid */}
       {isLoading ? (
-        <div className="flex min-h-100 flex-col items-center justify-center gap-2">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-xs text-muted-foreground animate-pulse">Aggiornamento catalogo...</p>
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, index) => (
+            <div
+              key={index}
+              className="h-80 animate-pulse rounded-2xl border bg-muted/30"
+            />
+          ))}
         </div>
       ) : products.content.length === 0 ? (
-        /* Empty State Strutturato */
-        <div className="flex min-h-87.5 flex-col items-center justify-center text-center rounded-xl border border-dashed p-8 bg-muted/10 animate-in fade-in-50">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground/80 mb-4">
-            <Inbox className="h-6 w-6" />
+        <div className="flex min-h-87.5 flex-col items-center justify-center rounded-2xl border border-dashed bg-muted/10 p-8 text-center animate-in fade-in-50">
+          <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-muted text-muted-foreground">
+            <Inbox className="h-7 w-7" />
           </div>
-          <h3 className="text-base font-semibold text-foreground">Nessun prodotto trovato</h3>
-          <p className="text-sm text-muted-foreground max-w-sm mt-1">
-            Nessun articolo corrisponde ai criteri di ricerca attuali. Prova a cambiare parole chiave o a reimpostare i filtri.
+
+          <h3 className="text-lg font-semibold text-foreground">
+            Nessun prodotto trovato
+          </h3>
+
+          <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
+            Non ci sono prodotti compatibili con i filtri attuali. Prova a modificare la ricerca,
+            cambiare categoria o mostrare anche gli articoli non disponibili.
           </p>
+
           {(query || categorySlug || !onlyAvailable) && (
             <Button
-              variant="link"
+              variant="default"
               size="sm"
-              className="mt-3 text-primary font-medium"
+              className="mt-5"
               onClick={() => {
                 setSearchParams({})
                 setOnlyAvailable(true)
               }}
             >
-              Azzera tutti i filtri
+              Azzera filtri
             </Button>
           )}
         </div>
       ) : (
-        /* Griglia dei Prodotti */
-        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 animate-in fade-in duration-200">
-          {products.content.map((product) => (
-            <ProductCard
-              disabledActions={!isAuthenticated || addToCartMutation.isPending || wishlistMutation.isPending}
-              key={product.id}
-              onAddToCart={(item) => void addToCartMutation.mutateAsync(item)}
-              onWishlist={(item) => void wishlistMutation.mutateAsync(item)}
-              product={product}
-            />
-          ))}
-        </div>
-      )}
+        <>
+          <div className="grid gap-5 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 animate-in fade-in duration-200">
+            {products.content.map((product) => (
+              <ProductCard
+                key={product.id}
+                disabledActions={
+                  !isAuthenticated ||
+                  addToCartMutation.isPending ||
+                  wishlistMutation.isPending
+                }
+                onAddToCart={(item) => void addToCartMutation.mutateAsync(item)}
+                onWishlist={(item) => void wishlistMutation.mutateAsync(item)}
+                product={product}
+              />
+            ))}
+          </div>
 
-      <ProductsPagination products={products}/>
+          <ProductsPagination products={products} />
+        </>
+      )}
     </div>
   )
 }

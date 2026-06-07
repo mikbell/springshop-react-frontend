@@ -1,79 +1,29 @@
-import * as React from "react"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useQuery } from "@tanstack/react-query"
 import {
   ArrowLeft,
-  Loader2,
-  Package,
-  Send,
-  ShoppingCart,
-  Star,
 } from "lucide-react"
 import { Link, Navigate, useParams } from "react-router-dom"
-
-import { cartApi, reviewsApi } from "@/lib/api/handlers"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { formatDate, formatMoney, resolveAssetUrl } from "@/lib/format"
-import { queryKeys } from "@/lib/query-keys"
 import { queries } from "@/lib/queries"
 import { useAuth } from "@/lib/state/auth"
-import { cn } from "@/lib/utils"
+import { ReviewsSection } from "@/components/shop/sections/reviews-section"
+import ProductDetailsSection from "@/components/shop/sections/product-details-section"
 
 export function ProductPage() {
   const { slug } = useParams()
   const { isAuthenticated } = useAuth()
-  const queryClient = useQueryClient()
   const productSlug = slug ?? ""
-
-  // Stato locale per gestire il selettore di rating interattivo nella form
-  const [formRating, setFormRating] = React.useState<number>(5)
 
   const {
     data: product,
     error,
     isLoading,
-  } = useQuery(queries.productBySlug(productSlug))
+  } = useQuery({
+    ...queries.productBySlug(productSlug),
+    enabled: Boolean(productSlug),
+  })
+
   const productId = product?.id ?? ""
-  const { data: reviewPage, isLoading: loadingReviews } = useQuery(
-    queries.reviews(productId, { size: 6 })
-  )
-
-  const addToCartMutation = useMutation({
-    mutationFn: () => {
-      if (!productId) {
-        throw new Error("Prodotto non caricato.")
-      }
-      return cartApi.add(productId, 1)
-    },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.cart })
-    },
-  })
-
-  const reviewMutation = useMutation({
-    mutationFn: (payload: { rating: number; comment: string }) => {
-      if (!productId) {
-        throw new Error("Prodotto non caricato.")
-      }
-      return reviewsApi.create(productId, payload)
-    },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: queryKeys.reviews(productId),
-      })
-      void queryClient.invalidateQueries({
-        queryKey: queryKeys.product(productId),
-      })
-      void queryClient.invalidateQueries({
-        queryKey: queryKeys.productBySlug(productSlug),
-      })
-      void queryClient.invalidateQueries({ queryKey: queryKeys.products })
-      setFormRating(5) // Reset del rating locale
-    },
-  })
 
   if (!slug) {
     return <Navigate replace to="/" />
@@ -81,55 +31,75 @@ export function ProductPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-100 flex-col items-center justify-center gap-2">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="animate-pulse text-sm text-muted-foreground">
-          Caricamento prodotto...
-        </p>
+      <div className="container mx-auto grid max-w-7xl gap-8 px-4 py-6">
+        <div className="h-9 w-40 animate-pulse rounded-md bg-muted" />
+
+        <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_460px]">
+          <div className="aspect-4/3 animate-pulse rounded-2xl border bg-muted md:aspect-square lg:aspect-16/10" />
+
+          <div className="rounded-2xl border bg-card p-6 shadow-sm">
+            <div className="mb-5 flex gap-2">
+              <div className="h-6 w-24 animate-pulse rounded-full bg-muted" />
+              <div className="h-6 w-28 animate-pulse rounded-full bg-muted" />
+            </div>
+
+            <div className="space-y-3">
+              <div className="h-10 w-4/5 animate-pulse rounded bg-muted" />
+              <div className="h-5 w-44 animate-pulse rounded bg-muted" />
+            </div>
+
+            <div className="mt-6 space-y-3">
+              <div className="h-4 w-full animate-pulse rounded bg-muted" />
+              <div className="h-4 w-11/12 animate-pulse rounded bg-muted" />
+              <div className="h-4 w-2/3 animate-pulse rounded bg-muted" />
+            </div>
+
+            <div className="mt-10 rounded-2xl border bg-muted/20 p-4">
+              <div className="h-4 w-32 animate-pulse rounded bg-muted" />
+              <div className="mt-3 h-10 w-40 animate-pulse rounded bg-muted" />
+              <div className="mt-5 h-12 w-full animate-pulse rounded bg-muted" />
+            </div>
+          </div>
+        </section>
       </div>
     )
   }
 
   if (error instanceof Error || !product) {
     return (
-      <div className="mx-auto my-12 grid max-w-md gap-4 rounded-xl border border-destructive/30 bg-destructive/5 p-6 text-center">
-        <p className="font-semibold text-destructive">
-          {error instanceof Error
-            ? error.message
-            : "Prodotto non trovato o non disponibile."}
-        </p>
-        <Button asChild className="mx-auto w-fit" variant="outline">
-          <Link to="/" className="gap-2">
-            <ArrowLeft className="h-4 w-4" /> Torna al Catalogo
-          </Link>
-        </Button>
+      <div className="container mx-auto flex min-h-100 max-w-7xl items-center justify-center px-4 py-6">
+        <div className="grid max-w-md gap-5 rounded-2xl border border-destructive/30 bg-destructive/5 p-8 text-center shadow-sm">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+            <ArrowLeft className="h-6 w-6" />
+          </div>
+
+          <div>
+            <h1 className="text-lg font-semibold text-destructive">
+              Prodotto non disponibile
+            </h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {error instanceof Error
+                ? error.message
+                : "Il prodotto cercato non esiste oppure non è più disponibile."}
+            </p>
+          </div>
+
+          <Button asChild className="mx-auto" variant="outline">
+            <Link to="/" className="gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Torna al catalogo
+            </Link>
+          </Button>
+        </div>
       </div>
     )
   }
 
-  const unavailable =
-    product.stockQuantity <= 0 || product.status !== "AVAILABLE"
-  const imageUrl = resolveAssetUrl(product.imageUrl)
-  const reviews = reviewPage?.content ?? []
-
-  async function submitReview(event: React.SubmitEvent<HTMLFormElement>) {
-    event.preventDefault()
-    const form = event.currentTarget
-    const data = new FormData(form)
-
-    await reviewMutation.mutateAsync({
-      rating: formRating,
-      comment: String(data.get("comment") || ""),
-    })
-    form.reset()
-  }
-
   return (
-    <div className="container mx-auto grid max-w-7xl gap-8 px-4 py-6">
-      {/* Back Button */}
+    <div className="container mx-auto grid max-w-7xl gap-10 px-4 py-6 lg:py-8">
       <Button
         asChild
-        className="-ml-2 w-fit text-muted-foreground hover:text-foreground"
+        className="-ml-3 w-fit text-muted-foreground hover:text-foreground"
         variant="ghost"
       >
         <Link to="/" className="gap-2">
@@ -138,259 +108,18 @@ export function ProductPage() {
         </Link>
       </Button>
 
-      {/* Main Product Section */}
-      <section className="grid gap-8 md:grid-cols-2 lg:grid-cols-[1fr_460px]">
-        {/* Product imageUrlWrapper */}
-        <div className="flex aspect-4/3 items-center justify-center overflow-hidden rounded-xl border bg-muted shadow-sm md:aspect-square lg:aspect-16/10">
-          {imageUrl ? (
-            <img
-              alt={product.name}
-              className="h-full w-full object-cover object-center transition-transform duration-300 hover:scale-102"
-              src={imageUrl}
-            />
-          ) : (
-            <div className="flex flex-col items-center gap-2 text-muted-foreground/50">
-              <Package className="h-16 w-16 stroke-[1.2]" />
-              <span className="text-xs">Immagine non disponibile</span>
-            </div>
-          )}
-        </div>
+      <ProductDetailsSection
+        product={product}
+        isAuthenticated={isAuthenticated}
+      />
 
-        {/* Product Meta */}
-        <div className="flex flex-col justify-start gap-5">
-          <div className="flex flex-wrap gap-2">
-            <Badge asChild variant="secondary" className="px-2.5 py-0.5">
-              <Link
-                to={
-                  product.category
-                    ? `/?category=${product.category.slug}`
-                    : "/categories"
-                }
-                className="hover:underline"
-              >
-                {product.category?.name ?? "Senza categoria"}
-              </Link>
-            </Badge>
-            <Badge
-              variant="outline"
-              className="px-2.5 py-0.5 font-mono text-muted-foreground"
-            >
-              SKU: {product.sku}
-            </Badge>
-            <Badge
-              variant={unavailable ? "destructive" : "secondary"}
-              className={cn(
-                "px-2.5 py-0.5",
-                !unavailable &&
-                "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/10 dark:text-emerald-400"
-              )}
-            >
-              {unavailable ? "Non disponibile" : "Disponibile"}
-            </Badge>
-          </div>
+      <div className="h-px bg-border" />
 
-          <div className="space-y-2">
-            <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
-              {product.name}
-            </h1>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center text-amber-500">
-                <Star className="h-4 w-4 fill-current" />
-                <span className="ml-1 text-sm font-semibold">
-                  {product.averageRating?.toFixed(1) ?? "-"}
-                </span>
-              </div>
-              <span className="text-xs text-muted-foreground">•</span>
-              <span className="text-sm text-muted-foreground">
-                {product.reviewCount} recensioni utenti
-              </span>
-            </div>
-          </div>
-
-          <p className="text-base leading-relaxed whitespace-pre-line text-muted-foreground">
-            {product.description ??
-              "Nessuna descrizione disponibile per questo articolo."}
-          </p>
-
-          <div className="mt-auto space-y-4 border-t pt-4">
-            <div className="flex flex-col">
-              <span className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
-                Prezzo al pubblico
-              </span>
-              <div className="text-3xl font-extrabold tracking-tight">
-                {formatMoney(product.price)}
-              </div>
-            </div>
-
-            <Button
-              className="h-11 w-full gap-2 text-base shadow-sm transition-transform active:scale-[0.99]"
-              disabled={
-                !isAuthenticated ||
-                unavailable ||
-                !productId ||
-                addToCartMutation.isPending
-              }
-              onClick={() => void addToCartMutation.mutateAsync()}
-              type="button"
-            >
-              {addToCartMutation.isPending ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                <ShoppingCart className="h-5 w-5" />
-              )}
-              {unavailable
-                ? "Prodotto esaurito"
-                : !isAuthenticated
-                  ? "Accedi per acquistare"
-                  : "Aggiungi al carrello"}
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      <hr className="my-4 border-muted" />
-
-      {/* Reviews Section */}
-      <section className="grid items-start gap-8 lg:grid-cols-[1fr_380px]">
-        {/* Left Side: Reviews List */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <h2 className="text-xl font-bold tracking-tight">
-              Recensioni della Community
-            </h2>
-            {loadingReviews && (
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            )}
-          </div>
-
-          {!loadingReviews && reviews.length === 0 ? (
-            <div className="rounded-xl border border-dashed bg-muted/20 p-8 text-center text-muted-foreground">
-              <p className="text-sm">
-                Ancora nessuna valutazione per questo prodotto.
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground/70">
-                Sii il primo a condividere la tua opinione!
-              </p>
-            </div>
-          ) : null}
-
-          <div className="grid gap-3">
-            {reviews.map((review) => (
-              <Card className="rounded-xl shadow-sm" key={review.id}>
-                <CardHeader className="p-4 pb-2">
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="text-sm font-semibold">
-                      {review.authorName}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {formatDate(review.createdAt)}
-                    </span>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-2 p-4 pt-0">
-                  {/* Stelle della recensione sicure */}
-                  <div className="flex gap-0.5 text-amber-500">
-                    {Array.from({ length: 5 }).map((_, index) => (
-                      <Star
-                        className={cn(
-                          "h-3.5 w-3.5",
-                          index < Math.floor(review.rating)
-                            ? "fill-current"
-                            : "text-muted/60"
-                        )}
-                        key={index}
-                      />
-                    ))}
-                  </div>
-                  <p className="text-sm leading-normal text-muted-foreground">
-                    {review.comment}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-
-        {/* Right Side: Form Create Review */}
-        <Card className="sticky top-6 rounded-xl shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-lg">Esprimi la tua opinione</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isAuthenticated ? (
-              <form
-                className="grid gap-4"
-                onSubmit={(e) => void submitReview(e)}
-              >
-                <div className="space-y-2">
-                  <Label>La tua valutazione</Label>
-                  {/* Selettore a Stelle UX-friendly */}
-                  <div className="flex items-center gap-1.5 pt-1">
-                    {Array.from({ length: 5 }).map((_, index) => {
-                      const starValue = index + 1
-                      return (
-                        <button
-                          type="button"
-                          key={index}
-                          className="text-amber-500 transition-transform hover:scale-110 focus:outline-none"
-                          onClick={() => setFormRating(starValue)}
-                        >
-                          <Star
-                            className={cn(
-                              "h-6 w-6",
-                              starValue <= formRating
-                                ? "fill-current"
-                                : "text-muted"
-                            )}
-                          />
-                        </button>
-                      )
-                    })}
-                    <span className="ml-2 text-xs font-bold text-muted-foreground">
-                      ({formRating}/5)
-                    </span>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="comment">Raccontaci la tua esperienza</Label>
-                  <Textarea
-                    id="comment"
-                    name="comment"
-                    placeholder="Cosa ne pensi di questo articolo? Quali sono i pro e i contro?"
-                    rows={4}
-                    className="resize-none"
-                    required
-                  />
-                </div>
-
-                <Button
-                  disabled={!productId || reviewMutation.isPending}
-                  type="submit"
-                  className="mt-1 w-full gap-2"
-                >
-                  {reviewMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Send className="h-4 w-4" />
-                  )}
-                  <span>Invia Recensione</span>
-                </Button>
-              </form>
-            ) : (
-              <div className="space-y-3 py-4 text-center">
-                <p className="text-xs text-muted-foreground">
-                  Devi effettuare l'accesso per poter lasciare una recensione su
-                  questo prodotto.
-                </p>
-                <Button variant="outline" size="sm" asChild className="w-full">
-                  <Link to="/login">Accedi ora</Link>
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </section>
+      <ReviewsSection
+        isAuthenticated={isAuthenticated}
+        productId={productId}
+        productSlug={productSlug}
+      />
     </div>
   )
 }

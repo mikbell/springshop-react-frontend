@@ -34,7 +34,7 @@ const getStatusVariant = (status: OrderStatus) => {
   }
 }
 
-export function AllOrdersPage() {
+export function AdminOrdersPage() {
   const { isAdmin } = useAuth()
   const queryClient = useQueryClient()
 

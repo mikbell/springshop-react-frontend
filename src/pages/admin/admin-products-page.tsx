@@ -9,7 +9,7 @@ import { useAuth } from "@/lib/state/auth"
 import { LoadingSpinner } from "@/components/shop/loading-spinner"
 import AdminProductCard from "@/components/admin/admin-product-card"
 
-export function AllProductsPage() {
+export function AdminProductsPage() {
   const { isAdmin } = useAuth()
   const queryClient = useQueryClient()
 

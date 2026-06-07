@@ -19,7 +19,7 @@ import { useAuth } from "@/lib/state/auth"
 import { LoadingSpinner } from "@/components/shop/loading-spinner"
 import { AdminCategoryCard } from "@/components/admin/admin-category-card"
 
-export function CategoryManagementPage() {
+export function AdminCategoriesPage() {
   const { isAdmin } = useAuth()
   const queryClient = useQueryClient()
 

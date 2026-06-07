@@ -16,34 +16,46 @@ export function OrderSuccessPage() {
   }, [queryClient])
 
   return (
-    <div className="mx-auto grid min-h-[calc(100svh-10rem)] max-w-2xl place-items-center">
-      <Card className="w-full rounded-lg border-primary/20 bg-card shadow-sm">
-        <CardContent className="grid gap-6 p-6 text-center sm:p-8">
-          <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-primary/10 text-primary">
-            <CheckCircle2 className="size-8" />
+    <div className="container mx-auto grid min-h-[calc(100svh-10rem)] max-w-2xl place-items-center px-4 py-8">
+      <Card className="w-full overflow-hidden rounded-2xl border-primary/20 bg-card shadow-sm">
+        <CardContent className="grid gap-7 p-6 text-center sm:p-10">
+          <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <CheckCircle2 className="size-10" />
           </div>
 
-          <div className="grid gap-2">
-            <h1 className="text-2xl font-semibold tracking-normal sm:text-3xl">
+          <div className="grid gap-3">
+            <p className="text-sm font-medium text-primary">
+              Pagamento confermato
+            </p>
+
+            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
               Ordine completato
             </h1>
-            <p className="text-sm leading-6 text-muted-foreground sm:text-base">
-              Pagamento registrato correttamente. Puoi consultare il riepilogo nella
-              sezione ordini.
+
+            <p className="mx-auto max-w-md text-sm leading-6 text-muted-foreground sm:text-base">
+              Abbiamo registrato correttamente il pagamento. Il riepilogo
+              dell’ordine è disponibile nella sezione ordini.
+            </p>
+          </div>
+
+          <div className="grid gap-3 rounded-2xl bg-muted/30 p-4 text-sm text-muted-foreground">
+            <p>
+              Riceverai gli aggiornamenti sull’ordine appena disponibili.
             </p>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <Button asChild>
+            <Button asChild className="h-11 gap-2">
               <Link to="/orders">
-                <ReceiptText />
+                <ReceiptText className="h-4 w-4" />
                 Vedi ordini
-                <ArrowRight />
+                <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
-            <Button asChild variant="outline">
+
+            <Button asChild variant="outline" className="h-11 gap-2">
               <Link to="/">
-                <ShoppingBag />
+                <ShoppingBag className="h-4 w-4" />
                 Continua gli acquisti
               </Link>
             </Button>
